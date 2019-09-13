@@ -42,9 +42,31 @@ void javascriptContent(){
     Javascript+="\n";
     Javascript+="function response(){\n";
     Javascript+="xmlResponse=xmlHttp.responseXML;\n";
-    Javascript+="xmldoc = xmlResponse.getElementsByTagName('data');\n";
+    
+    Javascript+="xmldoc = xmlResponse.getElementsByTagName('T1');\n";
     Javascript+="message = xmldoc[0].firstChild.nodeValue;\n";
-    Javascript+="document.getElementById('div1').innerHTML=message;\n";
+    Javascript+="document.getElementById('T1').innerHTML=message;\n";
+    
+    Javascript+="xmldoc = xmlResponse.getElementsByTagName('T4');\n";
+    Javascript+="message = xmldoc[0].firstChild.nodeValue;\n";
+    Javascript+="document.getElementById('T2').innerHTML=message;\n";
+
+    Javascript+="xmldoc = xmlResponse.getElementsByTagName('T2');\n";
+    Javascript+="message = xmldoc[0].firstChild.nodeValue;\n";
+    Javascript+="document.getElementById('T3').innerHTML=message;\n";
+    
+    Javascript+="xmldoc = xmlResponse.getElementsByTagName('T5');\n";
+    Javascript+="message = xmldoc[0].firstChild.nodeValue;\n";
+    Javascript+="document.getElementById('T4').innerHTML=message;\n";
+
+    Javascript+="xmldoc = xmlResponse.getElementsByTagName('T3');\n";
+    Javascript+="message = xmldoc[0].firstChild.nodeValue;\n";
+    Javascript+="document.getElementById('T5').innerHTML=message;\n";
+    
+    Javascript+="xmldoc = xmlResponse.getElementsByTagName('T6');\n";
+    Javascript+="message = xmldoc[0].firstChild.nodeValue;\n";
+    Javascript+="document.getElementById('T6').innerHTML=message;\n";
+    
     Javascript+="}\n";
 
     Javascript+="function process(){\n";
@@ -73,10 +95,21 @@ void WebsiteContent(){
     Website+=".item {font-size: 1.05em;}</style>\n";
     Website+="<body onload='process()'> <div class=\"ui fixed inverted menu borderless\"> <div class=\"ui container\"> <a class=\"item\" href=\"https://github.com/deletron247/SMART_Home\" target=\"_blank\">GitHub</a></div></div>";
     Website+="<div class=\"ui main text container raised segment\" style=\"margin-top: 5em; margin-bottom: 5em\"> <div class=\"ui items\" style=\"padding: 2em; margin-top: 0\">";
-    Website+="<h2 class=\"ui icon header center aligned\"> <i class=\"settings icon\"></i> <div class=\"content\">Панель управления<div class=\"sub header\"></div> </div> </h2> <div class=\"ui divider\"></div>";
-    Website+="<div class=\"item\"> <div class=\"middle aligned content\"> <div class=\"header\">Бойлер</div> <div class=\"description\">";
+    Website+="<h2 class=\"ui icon header center aligned\"> <i class=\"settings icon\"></i> <div class=\"content\">Панель управления<div class=\"sub header\"></div> </div> </h2>";
+   
+    Website+="<div class=\"ui divider\"></div><div class=\"item\"> <div class=\"middle aligned content\"> <div class=\"header\">Бойлер</div> <div class=\"description\">";
+    Website+="<div id='T1'>"+Td1+"</div>";
+    Website+="<div id='T2'>"+Td4+"</div></div>";
+
+    Website+="<div class=\"ui divider\"></div><div class=\"header\">Котёл</div> <div class=\"description\">";
+    Website+="<div id='T3'>"+Td2+"</div>";
+    Website+="<div id='T4'>"+Td5+"</div></div>";
+
+    Website+="<div class=\"ui divider\"></div><div class=\"header\">Солнечный колектор</div> <div class=\"description\">";
+    Website+="<div id='T5'>"+Td3+"</div>";
+    Website+="<div id='T6'>"+Td6+"</div></div>";
     
-    Website+="<div id='div1'>"+Td1+"</div></body></html>";
+    Website+="</body></html>";
     Website+=Javascript;
     server.send(200,"text/html",Website);
   }
@@ -85,8 +118,25 @@ void XMLcontent(){
 
   XML ="<?xml version='1.0'?>";
   XML+="<data>";
+  XML+="<T1>";
   XML+=Td1;
-  XML+="</data>";
+  XML+="</T1>";
+  XML+="<T2>";
+  XML+=Td2;
+  XML+="</T2>";
+  XML+="<T3>";
+  XML+=Td3;
+  XML+="</T3>";
+  XML+="<T4>";
+  XML+=Td4;
+  XML+="</T4>";
+  XML+="<T5>";
+  XML+=Td5;
+  XML+="</T5>";
+  XML+="<T6>";
+  XML+=Td6;
+  XML+="</T6>";
+   XML+="</data>";
 
   server.send(200,"text/xml",XML);
   
