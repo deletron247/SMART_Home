@@ -1,28 +1,24 @@
-//********БИБЛИОТЕКИ**************
+//==== Подключаем библиотеки ===============================================
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <SPI.h>
 #include "nRF24L01.h"
 #include "RF24.h"
-//********************************
+//==========================================================================
+//
+//==== Настраиваем подключение к Wifi ======================================
+const char* ssid="1975_Network";
+const char* password="1122334455";
+//==========================================================================
+String Website,Td1,Td2,Td3,Td4,Td5,Td6,Tmd,Tpd,XML,Javascript;
 
-const char* ssid="Название WIFI";
-const char* password="пароль от WIFI";
-
-String Website,Td1,Td2,Td3,Td4,Td5,Td6,XML,Javascript;
-
-int T1 = 0;
-int T2 = 0;
-int T3 = 0;
-int T4 = 0;
-int T5 = 0;
-int T6 = 0;
+int T1,T2,T3,T4,T5,T6,N1,N2,Tmn,Tpn = 0;
 
 //---# Настройки для NRF #-----------
 
 RF24 radio(4, 15); // "создать" модуль на пинах 9 и 10 Для Уно
 
-byte recieved_data[6]; // массив принятых данных
+byte recieved_data[10]; // массив принятых данных
 
 byte address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; //возможные номера труб
 
@@ -66,7 +62,7 @@ void javascriptContent(){
     Javascript+="xmldoc = xmlResponse.getElementsByTagName('T6');\n";
     Javascript+="message = xmldoc[0].firstChild.nodeValue;\n";
     Javascript+="document.getElementById('T6').innerHTML=message;\n";
-    
+   
     Javascript+="}\n";
 
     Javascript+="function process(){\n";
@@ -76,12 +72,8 @@ void javascriptContent(){
     Javascript+="setTimeout('process()',200);\n";
     Javascript+="}\n";
     
-    Javascript+="</SCRIPT>\n";
-    
-  
+    Javascript+="</SCRIPT>\n"; 
   }
-
-
 
 void WebsiteContent(){
     javascriptContent();
@@ -108,6 +100,18 @@ void WebsiteContent(){
     Website+="<div class=\"ui divider\"></div><div class=\"header\">Солнечный колектор</div> <div class=\"description\">";
     Website+="<div id='T5'>"+Td3+"</div>";
     Website+="<div id='T6'>"+Td6+"</div></div>";
+
+    Website+="<div class=\"ui divider\"></div><div class=\"header\">Насосы</div> <div class=\"description\">";
+    if (N1 == 0) {Website+="<h3>Насос №1<img height=\"30px\" style=\"margin-left:10px; vertical-align:middle\" src=\"https://raw.githubusercontent.com/deletron247/SMART_Home/master/website/2.png\" alt=\"image\"><h3>"; }else{ Website+="<h3>Насос №1<img height=\"30px\" style=\"margin-left:10px; vertical-align:middle\" src=\"https://raw.githubusercontent.com/deletron247/SMART_Home/master/website/1.png\" alt=\"image\"><h3>";}
+    if (N2 == 0) {Website+="<h3>Насос №2<img height=\"30px\" style=\"margin-left:10px; vertical-align:middle\" src=\"https://raw.githubusercontent.com/deletron247/SMART_Home/master/website/2.png\" alt=\"image\"><h3></div>"; }else{ Website+="<h3>Насос №2<img  height=\"30px\" style=\"margin-left:10px; vertical-align:middle\" src=\"https://raw.githubusercontent.com/deletron247/SMART_Home/master/website/1.png\" alt=\"image\"><h3></div>";}
+
+    Website+="<div class=\"ui divider\"></div><div class=\"header\">Настройка</div> <div class=\"description\">";
+    Website+="<form method=\"GET\" action=\"con\">";
+    Website+="<p><h4>Макс.t бойлера<input type=\"text\" name=\"Tm\" style=\"margin-left:10px\" value="+Tmd+" size=\"2\">°C</h4></p>";
+    Website+="<p><h4>Термо порог<input type=\"text\" name=\"Tp\" style=\"margin-left:10px\" value="+Tpd+" size=\"2\">°C</h4></p>";
+    Website+="<p><button type=\"submit\">Отправить</button></p>";
+    Website+="</form>";
+    Website+="</div>";
     
     Website+="</body></html>";
     Website+=Javascript;
@@ -118,25 +122,25 @@ void XMLcontent(){
 
   XML ="<?xml version='1.0'?>";
   XML+="<data>";
-  XML+="<T1>";
+  XML+="<T1>"; //Температура датчика 1
   XML+=Td1;
   XML+="</T1>";
-  XML+="<T2>";
+  XML+="<T2>"; //Температура датчика 2
   XML+=Td2;
   XML+="</T2>";
-  XML+="<T3>";
+  XML+="<T3>"; //Температура датчика 3
   XML+=Td3;
   XML+="</T3>";
-  XML+="<T4>";
+  XML+="<T4>"; //Температура датчика 4
   XML+=Td4;
   XML+="</T4>";
-  XML+="<T5>";
+  XML+="<T5>"; //Температура датчика 5
   XML+=Td5;
   XML+="</T5>";
-  XML+="<T6>";
+  XML+="<T6>"; //Температура датчика 6
   XML+=Td6;
   XML+="</T6>";
-   XML+="</data>";
+  XML+="</data>";
 
   server.send(200,"text/xml",XML);
   
@@ -148,7 +152,6 @@ void setup() {
   WiFi.begin(ssid,password);
   while(WiFi.status()!=WL_CONNECTED)delay(500);
   WiFi.mode(WIFI_STA);
-  Serial.print(WiFi.localIP());
   server.on("/",WebsiteContent);
   server.on("/xml",XMLcontent);
   server.begin();
@@ -175,14 +178,18 @@ radio.begin(); //активировать модуль
   radio.powerUp(); //начать работу
   radio.startListening();  //начинаем слушать эфир, мы приёмный модуль
 //------------------------------------------
-
+  server.on("/con", []() {   
+  Tmn = server.arg("Tm").toInt();
+  Tpn = server.arg("Tp").toInt();
+  server.send(200, "text/html", Website);
+  });
 }
 
 void loop() {
 //---# Начинаем слушать эфир NRF и присваиваем переменные #---------
   byte pipeNo;
-  while ( radio.available(&pipeNo)) {  // слушаем эфир со всех труб
-    radio.read( &recieved_data, sizeof(recieved_data) );         // чиатем входящий сигнал
+  if ( radio.available(&pipeNo)) {  // слушаем эфир со всех труб
+    radio.read( &recieved_data, sizeof(recieved_data) );         // читем входящий сигнал
   }
   int T1 = recieved_data[0];
   int T2 = recieved_data[1];
@@ -190,9 +197,14 @@ void loop() {
   int T4 = recieved_data[3];
   int T5 = recieved_data[4];
   int T6 = recieved_data[5];
+  int Tm = recieved_data[6];
+  int Tp = recieved_data[7];
+  N1 = recieved_data[8];
+  N2 = recieved_data[9];
 //------------------------------------------------------------------
     
-  // put your main code here, to run repeatedly:
+  //Преобразуем переменные для вывода на сайт
+  //Показания температуры
   Td1=(String)"Верх "+T1+" °C";
   Td2=(String)"Верх "+T2+" °C";
   Td3=(String)"Верх "+T3+" °C";
@@ -200,8 +212,13 @@ void loop() {
   Td4=(String)"Низ "+T4+" °C";
   Td5=(String)"Низ "+T5+" °C";
   Td6=(String)"Низ "+T6+" °C";
+  //Показания макс темп. и темп порога
+  Tmd=(String)Tm; 
+  Tpd=(String)Tp;
+  
   server.handleClient();
-
-
+  if ((Tmn!=Tm)&&(Tmn>0)){
+    Tm=Tmn;
+  }
 }
     
