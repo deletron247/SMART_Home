@@ -2,23 +2,25 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <SPI.h>
-#include "nRF24L01.h"
-#include "RF24.h"
+#include <nRF24L01.h>
+#include <RF24.h>
 //==========================================================================
 //
 //==== Настраиваем подключение к Wifi ======================================
-const char* ssid="1975_Network";
-const char* password="1122334455";
+const char* ssid="Имя Wifi";
+const char* password="Пароль от нее";
 //==========================================================================
-String Website,Td1,Td2,Td3,Td4,Td5,Td6,Tmd,Tpd,XML,Javascript;
-
+//
+//==========================================================================
+String Website,Td1,Td2,Td3,Td4,Td5,Td6,Tmd,Tpd,XML,Javascript,Config;
 int T1,T2,T3,T4,T5,T6,N1,N2,Tmn,Tpn = 0;
-
+//==========================================================================
 //---# Настройки для NRF #-----------
 
 RF24 radio(4, 15); // "создать" модуль на пинах 9 и 10 Для Уно
 
 byte recieved_data[10]; // массив принятых данных
+byte transmited_data[2];// массив отправленых данных
 
 byte address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; //возможные номера труб
 
@@ -171,26 +173,34 @@ radio.begin(); //активировать модуль
   radio.setChannel(0x60);  //выбираем канал (в котором нет шумов!)
 
   radio.setPALevel (RF24_PA_MAX); //уровень мощности передатчика. На выбор RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
-  radio.setDataRate (RF24_250KBPS); //скорость обмена. На выбор RF24_2MBPS, RF24_1MBPS, RF24_250KBPS
+  radio.setDataRate (RF24_1MBPS); //скорость обмена. На выбор RF24_2MBPS, RF24_1MBPS, RF24_250KBPS
   //должна быть одинакова на приёмнике и передатчике!
   //при самой низкой скорости имеем самую высокую чувствительность и дальность!!
 
   radio.powerUp(); //начать работу
   radio.startListening();  //начинаем слушать эфир, мы приёмный модуль
 //------------------------------------------
+
   server.on("/con", []() {   
   Tmn = server.arg("Tm").toInt();
   Tpn = server.arg("Tp").toInt();
-  server.send(200, "text/html", Website);
+  Config+="<SCRIPT>\n";
+  Config+="javascript:history.back();\n";
+  Config+="</SCRIPT>\n";
+  server.send(200, "text/html", Config);
   });
 }
 
 void loop() {
-//---# Начинаем слушать эфир NRF и присваиваем переменные #---------
+//==== Начинаем слушать и отправлять данные ===========
   byte pipeNo;
-  if ( radio.available(&pipeNo)) {  // слушаем эфир со всех труб
-    radio.read( &recieved_data, sizeof(recieved_data) );         // читем входящий сигнал
+  while ( radio.available(&pipeNo)) {  // слушаем эфир со всех труб
+      radio.read( &recieved_data, sizeof(recieved_data) );         // читем входящий сигнал
+      radio.writeAckPayload(pipeNo, &transmited_data, sizeof(transmited_data));    // отправляем пакет телеметрии
   }
+//======================================================
+//
+//======================================================
   int T1 = recieved_data[0];
   int T2 = recieved_data[1];
   int T3 = recieved_data[2];
@@ -201,7 +211,7 @@ void loop() {
   int Tp = recieved_data[7];
   N1 = recieved_data[8];
   N2 = recieved_data[9];
-//------------------------------------------------------------------
+//=======================================================
     
   //Преобразуем переменные для вывода на сайт
   //Показания температуры
@@ -217,8 +227,7 @@ void loop() {
   Tpd=(String)Tp;
   
   server.handleClient();
-  if ((Tmn!=Tm)&&(Tmn>0)){
-    Tm=Tmn;
-  }
-}
-    
+
+  transmited_data[0] = Tmn;
+  transmited_data[1] = Tpn;
+}  
