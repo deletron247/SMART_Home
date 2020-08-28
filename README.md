@@ -19,7 +19,7 @@
 
 Это наши датчики температуры бойлера, солнечного колектора и котла.
 
-6) Открываем код [arduino.ino](https://github.com/deletron247/SMART_Home/blob/master/boiler%20room/arduino/arduino.ino) и прописываем адреса полученые в пункте 2 в:
+6) Открываем код [arduino.ino](https://github.com/deletron247/SMART_Home/blob/master/boiler%20room/arduino/arduino.ino) и прописываем адреса полученые в пункте 5 в:
 ```C++
 //==== Адреса датчиков температуры =========================================================================
 DeviceAddress sensor1 = { 0x28, 0xFF, 0x13, 0xFA, 0x0, 0x17, 0x5, 0xAD }; // Адрес первого сенсора
